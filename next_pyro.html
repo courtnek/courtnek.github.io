@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Countdown to Pyro</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: black;
+        }
+        h1 {
+            color: #ececec;
+        }
+        #countdown {
+            font-size: 24px;
+            margin-top: 30px;
+            color:#ececec;
+        }
+        #current-time {
+            font-size: 18px;
+            margin-top: 20px;
+            color: #444;
+        }
+    </style>
+ 
+</head>
+<body onload="calculateCountdown()">
+    <h1>Countdown To Pyro</h1>
+    <div id="countdown"></div>
+    <div id="current-time"></div>
+    <script>
+        // Function to calculate the countdown
+        function calculateCountdown() {
+            // Array of datetime values
+            var datetimes = [
+                new Date('October 31, 2023 19:00:00 UTC'),
+                new Date('November 1, 2023 13:00:00 UTC'),
+                new Date('November 2, 2023 06:00:00 UTC'),
+                new Date('November 4, 2023 13:00:00 UTC'),
+                new Date('November 5, 2023 07:00:00 UTC'),
+                new Date('November 6, 2023 20:00:00 UTC'),
+                new Date('November 8, 2023 07:00:00 UTC'),
+                new Date('November 9, 2023 20:00:00 UTC'),
+                new Date('November 10, 2023 14:00:00 UTC')
+            ];
+            
+            // Sort the array in descending order
+            datetimes.sort(function(a, b) {
+                return a - b;
+            });
+            
+            var now = new Date();
+            var countdownElement = document.getElementById('countdown');
+            var currentDatetimeElement = document.getElementById('current-time');
+
+            
+            // Find the next datetime in the list
+            var nextDatetime;
+            var lastDatetime;
+                
+            for (var i = 0; i < datetimes.length; i++) {
+                if (datetimes[i] > now) {
+                    nextDatetime = datetimes[i];
+                    lastDatetime = datetimes[i-1];
+                    break;
+                }
+            }
+            
+            var remainingTime = (lastDatetime.getTime() + 8 * 60 * 60 * 1000) - now.getTime();
+            if (remainingTime > 0) {
+                // Calculate time remaining until 8 hours pass since the most recent datetime
+                var remainingTime = (lastDatetime.getTime() + 8 * 60 * 60 * 1000) - now.getTime();
+                var hours = Math.floor(remainingTime / (1000 * 60 * 60));
+                var minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+                
+                countdownElement.innerHTML = 'Pyro will close in ' + hours + 'h ' + minutes + 'm';
+            } else {
+
+                
+                // Calculate the time remaining until the next datetime
+                var remainingTime = nextDatetime - now;
+                var days = Math.floor(remainingTime / (1000 * 60 * 60 * 24));
+                var hours = Math.floor((remainingTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                var minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+                
+                countdownElement.innerHTML = 'Countdown to Pyro Window: ' + days + 'd ' + hours + 'h ' + minutes + 'm ' + seconds + 's';
+            }
+            
+            // Display the current time in UTC
+            currentDatetimeElement.innerHTML = 'Current Time in UTC: ' + now.toISOString();
+
+            // Recalculate the countdown every second
+            setTimeout(calculateCountdown, 1000);
+        }
+    </script>
+</body>
+</html>
