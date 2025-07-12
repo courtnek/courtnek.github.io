@@ -18,8 +18,16 @@
     <main class="flex-grow py-8">
         <div class="container mx-auto px-4">
             <div class="text-center mb-8">
-                <h2 class="text-4xl font-light mb-4">System Status: OPERATIONAL</h2>
+                <h2 id="system-status" class="text-4xl font-light mb-4">System Status: <span id="status-text" class="text-red-400">OFFLINE</span></h2>
                 <p class="text-gray-400">Adjust parameters to optimize encabulator performance</p>
+                <div class="mt-4">
+                    <button id="power-button" class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg font-semibold">
+                        START ENCABULATOR
+                    </button>
+                </div>
+                <div class="mt-2">
+                    <span class="text-sm text-gray-400">Efficiency: <span id="efficiency-display" class="text-yellow-400">0%</span></span>
+                </div>
             </div>
 
             <!-- Display Outputs -->
@@ -61,7 +69,7 @@
                             <input id="flux-slider" type="range" min="0" max="100" value="42" class="w-full">
                             <span id="flux-value" class="text-xs text-gray-400">42%</span>
                         </div>
-                        <button class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 text-sm">
+                        <button id="engage-bearings" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 text-sm" disabled>
                             ENGAGE BEARINGS
                         </button>
                     </div>
@@ -76,8 +84,8 @@
                             <input id="freq-input" type="number" value="2847" class="w-full bg-gray-800 border border-gray-600 text-white p-2 text-sm">
                         </div>
                         <div class="flex space-x-2">
-                            <button class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-2 text-xs">SYNC</button>
-                            <button class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-2 text-xs">RESET</button>
+                            <button id="motor-sync" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-2 text-xs" disabled>SYNC</button>
+                            <button id="motor-reset" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-2 text-xs" disabled>RESET</button>
                         </div>
                     </div>
                 </div>
@@ -142,12 +150,12 @@
                 <div class="border border-gray-700 p-6 bg-gray-900">
                     <h3 class="text-lg font-semibold mb-4 text-red-400">Rockwell Software</h3>
                     <div class="space-y-3">
-                        <button class="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-4 font-semibold">
+                        <button id="system-halt" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-4 font-semibold" disabled>
                             SYSTEM HALT
                         </button>
                         <div class="grid grid-cols-2 gap-2">
-                            <button class="bg-orange-600 hover:bg-orange-700 text-white py-2 text-xs">RESET</button>
-                            <button class="bg-gray-600 hover:bg-gray-700 text-white py-2 text-xs">BACKUP</button>
+                            <button id="system-reset" class="bg-orange-600 hover:bg-orange-700 text-white py-2 text-xs" disabled>RESET</button>
+                            <button id="system-backup" class="bg-gray-600 hover:bg-gray-700 text-white py-2 text-xs" disabled>BACKUP</button>
                         </div>
                         <div class="text-center">
                             <div class="inline-block w-3 h-3 bg-green-500 rounded-full"></div>
@@ -176,10 +184,92 @@
         let wavePhase = 0;
         let statusColors = ['bg-red-500', 'bg-green-500', 'bg-blue-500', 'bg-yellow-500', 'bg-purple-500', 'bg-cyan-500'];
         let currentColorIndex = 0;
+        let systemRunning = false;
+        let efficiency = 0;
+        let bearingsEngaged = false;
+        let motorSynced = false;
 
         // Get canvas and context
         const canvas = document.getElementById('waveform');
         const ctx = canvas.getContext('2d');
+
+        // Power button control
+        const powerButton = document.getElementById('power-button');
+        const statusText = document.getElementById('status-text');
+        const efficiencyDisplay = document.getElementById('efficiency-display');
+
+        powerButton.addEventListener('click', function() {
+            systemRunning = !systemRunning;
+            
+            if (systemRunning) {
+                this.textContent = 'STOP ENCABULATOR';
+                this.className = 'bg-red-600 hover:bg-red-700 text-white px-8 py-3 text-lg font-semibold';
+                statusText.textContent = 'ONLINE';
+                statusText.className = 'text-green-400';
+                enableControls();
+            } else {
+                this.textContent = 'START ENCABULATOR';
+                this.className = 'bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg font-semibold';
+                statusText.textContent = 'OFFLINE';
+                statusText.className = 'text-red-400';
+                efficiency = 0;
+                bearingsEngaged = false;
+                motorSynced = false;
+                disableControls();
+            }
+            updateEfficiency();
+        });
+
+        function enableControls() {
+            document.getElementById('engage-bearings').disabled = false;
+            document.getElementById('motor-sync').disabled = false;
+            document.getElementById('motor-reset').disabled = false;
+            document.getElementById('system-halt').disabled = false;
+            document.getElementById('system-reset').disabled = false;
+            document.getElementById('system-backup').disabled = false;
+        }
+
+        function disableControls() {
+            document.getElementById('engage-bearings').disabled = true;
+            document.getElementById('motor-sync').disabled = true;
+            document.getElementById('motor-reset').disabled = true;
+            document.getElementById('system-halt').disabled = true;
+            document.getElementById('system-reset').disabled = true;
+            document.getElementById('system-backup').disabled = true;
+        }
+
+        function updateEfficiency() {
+            if (!systemRunning) {
+                efficiency = 0;
+            } else {
+                // Calculate efficiency based on various factors
+                let baseEfficiency = 20;
+                if (bearingsEngaged) baseEfficiency += 25;
+                if (motorSynced) baseEfficiency += 20;
+                if (fluxValue > 60 && fluxValue < 80) baseEfficiency += 15;
+                if (pressure > 800 && pressure < 900) baseEfficiency += 10;
+                if (frequency > 2500 && frequency < 3000) baseEfficiency += 10;
+                
+                efficiency = Math.min(100, baseEfficiency);
+            }
+            
+            efficiencyDisplay.textContent = efficiency + '%';
+            
+            // Change status based on efficiency
+            if (efficiency < 30) {
+                statusText.textContent = 'CRITICAL';
+                statusText.className = 'text-red-400';
+            } else if (efficiency < 60) {
+                statusText.textContent = 'SUBOPTIMAL';
+                statusText.className = 'text-yellow-400';
+            } else if (efficiency < 85) {
+                statusText.textContent = 'OPTIMAL';
+                statusText.className = 'text-green-400';
+            } else {
+                statusText.textContent = 'MAXIMUM EFFICIENCY';
+                statusText.className = 'text-cyan-400';
+            }
+        }
 
         // Flux Capacitor Controls
         const fluxSlider = document.getElementById('flux-slider');
@@ -189,6 +279,14 @@
             fluxValue = parseInt(this.value);
             fluxValueSpan.textContent = fluxValue + '%';
             updateStatusSquare();
+            updateEfficiency();
+            
+            // Flux affects motor frequency
+            if (systemRunning && fluxValue > 70) {
+                frequency = Math.min(3500, frequency + Math.floor(Math.random() * 10));
+                document.getElementById('freq-input').value = frequency;
+                document.getElementById('freq-display').textContent = frequency;
+            }
         });
 
         // Quantum Oscillator Controls
@@ -198,6 +296,13 @@
             frequency = parseInt(this.value) || 0;
             document.getElementById('freq-display').textContent = frequency;
             updateWaveform();
+            updateEfficiency();
+            
+            // High frequency affects vane angle
+            if (systemRunning && frequency > 3000) {
+                pressure = Math.min(999, pressure + Math.floor(Math.random() * 20));
+                document.getElementById('pressure-value').textContent = pressure;
+            }
         });
 
         // Plasma Conduit Controls
@@ -206,15 +311,19 @@
         const pressureDown = document.getElementById('pressure-down');
 
         pressureUp.addEventListener('click', function() {
+            if (!systemRunning) return;
             pressure += Math.floor(Math.random() * 50) + 1;
             pressureValue.textContent = pressure;
             updateStatusSquare();
+            updateEfficiency();
         });
 
         pressureDown.addEventListener('click', function() {
+            if (!systemRunning) return;
             pressure = Math.max(0, pressure - Math.floor(Math.random() * 50) - 1);
             pressureValue.textContent = pressure;
             updateStatusSquare();
+            updateEfficiency();
         });
 
         // Graviton Stabilizer Controls
@@ -233,7 +342,63 @@
                 
                 // Non-intuitive effect: changes waveform amplitude
                 updateWaveform();
+                updateEfficiency();
             });
+        });
+
+        // Bearing engagement
+        document.getElementById('engage-bearings').addEventListener('click', function() {
+            bearingsEngaged = !bearingsEngaged;
+            this.textContent = bearingsEngaged ? 'DISENGAGE BEARINGS' : 'ENGAGE BEARINGS';
+            this.className = bearingsEngaged ? 
+                'w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 text-sm' :
+                'w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 text-sm';
+            updateEfficiency();
+        });
+
+        // Motor controls
+        document.getElementById('motor-sync').addEventListener('click', function() {
+            motorSynced = true;
+            this.className = 'flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-2 text-xs';
+            updateEfficiency();
+            
+            // Sync affects flux
+            fluxValue = Math.min(100, fluxValue + 10);
+            document.getElementById('flux-slider').value = fluxValue;
+            document.getElementById('flux-value').textContent = fluxValue + '%';
+        });
+
+        document.getElementById('motor-reset').addEventListener('click', function() {
+            motorSynced = false;
+            document.getElementById('motor-sync').className = 'flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-2 text-xs';
+            frequency = 2847;
+            document.getElementById('freq-input').value = frequency;
+            document.getElementById('freq-display').textContent = frequency;
+            updateEfficiency();
+        });
+
+        // System controls
+        document.getElementById('system-halt').addEventListener('click', function() {
+            systemRunning = false;
+            powerButton.click(); // Trigger power button
+        });
+
+        document.getElementById('system-reset').addEventListener('click', function() {
+            // Reset all values
+            fluxValue = 42;
+            frequency = 2847;
+            pressure = 847;
+            bearingsEngaged = false;
+            motorSynced = false;
+            
+            document.getElementById('flux-slider').value = fluxValue;
+            document.getElementById('flux-value').textContent = fluxValue + '%';
+            document.getElementById('freq-input').value = frequency;
+            document.getElementById('pressure-value').textContent = pressure;
+            document.getElementById('engage-bearings').textContent = 'ENGAGE BEARINGS';
+            document.getElementById('engage-bearings').className = 'w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 text-sm';
+            
+            updateEfficiency();
         });
 
         // Update Status Square (affected by flux and pressure in weird ways)
@@ -314,7 +479,9 @@
 
         // Animation loop
         function animate() {
-            updateWaveform();
+            if (systemRunning) {
+                updateWaveform();
+            }
             requestAnimationFrame(animate);
         }
 
@@ -322,8 +489,10 @@
         function flashStatusSquare() {
             const statusSquare = document.getElementById('status-square');
             
-            // Random flashing based on current state
-            if (Math.random() < 0.1) {
+            // More flashing when system is running and efficiency is low
+            let flashChance = systemRunning ? (efficiency < 50 ? 0.3 : 0.1) : 0.05;
+            
+            if (Math.random() < flashChance) {
                 statusSquare.style.opacity = '0.3';
                 setTimeout(() => {
                     statusSquare.style.opacity = '1';
@@ -338,6 +507,8 @@
         // Initialize displays
         updateStatusSquare();
         updateWaveform();
+        updateEfficiency();
+        disableControls();
     </script>
 </body>
 </html>
