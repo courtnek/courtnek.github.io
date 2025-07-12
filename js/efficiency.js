@@ -38,6 +38,8 @@ function updateEfficiency() {
         statusText.textContent = 'MAXIMUM EFFICIENCY';
         statusText.className = 'text-cyan-400';
     }
+    
+    updateHeaderBackground();
 }
 
 // Update Status Square (affected by flux and pressure in weird ways)
