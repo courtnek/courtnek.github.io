@@ -56,6 +56,21 @@
                 </div>
 
             </div>
+
+            <!-- Spectral Analysis Display -->
+            <div class="max-w-4xl mx-auto mb-8">
+                <div class="border border-gray-700 p-6 bg-gray-900">
+                    <h3 class="text-lg font-semibold mb-4 text-cyan-400">Quantum Spectral Analysis</h3>
+                    <div class="bg-black border border-gray-600 p-4 h-40 relative overflow-hidden">
+                        <canvas id="spectrum" width="600" height="128" class="w-full h-full"></canvas>
+                    </div>
+                    <div class="mt-2 text-xs text-gray-400 text-center grid grid-cols-3 gap-4">
+                        <div>Resonance: <span id="resonance-display" class="text-cyan-400">STABLE</span></div>
+                        <div>Peak Freq: <span id="peak-freq-display" class="text-yellow-400">2.4 kHz</span></div>
+                        <div>Harmonic Dist: <span id="harmonic-display" class="text-green-400">0.03%</span></div>
+                    </div>
+                </div>
+            </div>
             
             <!-- Control Panel Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
@@ -188,10 +203,28 @@
         let efficiency = 0;
         let bearingsEngaged = false;
         let motorSynced = false;
+        let spectrumBars = [];
+        let spectrumPhase = 0;
 
         // Get canvas and context
         const canvas = document.getElementById('waveform');
         const ctx = canvas.getContext('2d');
+        const spectrumCanvas = document.getElementById('spectrum');
+        const spectrumCtx = spectrumCanvas.getContext('2d');
+
+        // Initialize spectrum bars
+        for (let i = 0; i < 32; i++) {
+            spectrumBars.push({
+                height: Math.random() * 20 + 5,
+                targetHeight: Math.random() * 20 + 5,
+                color: getSpectrumColor(i)
+            });
+        }
+
+        function getSpectrumColor(index) {
+            const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6'];
+            return colors[Math.floor(index / 5) % colors.length];
+        }
 
         // Power button control
         const powerButton = document.getElementById('power-button');
@@ -477,10 +510,130 @@
             wavePhase += phaseSpeed;
         }
 
+        // Update Spectrum Display
+        function updateSpectrum() {
+            const width = spectrumCanvas.width;
+            const height = spectrumCanvas.height;
+            
+            // Clear canvas
+            spectrumCtx.fillStyle = '#000000';
+            spectrumCtx.fillRect(0, 0, width, height);
+            
+            // Update spectrum bars based on system parameters
+            const barWidth = width / spectrumBars.length;
+            
+            for (let i = 0; i < spectrumBars.length; i++) {
+                const bar = spectrumBars[i];
+                
+                // Calculate target height based on system parameters
+                let baseHeight = 10;
+                
+                // Flux affects low frequencies
+                if (i < 8) {
+                    baseHeight += (fluxValue / 100) * 40;
+                }
+                
+                // Frequency affects mid frequencies
+                if (i >= 8 && i < 24) {
+                    baseHeight += (frequency / 3500) * 60;
+                }
+                
+                // Pressure affects high frequencies
+                if (i >= 24) {
+                    baseHeight += (pressure / 1000) * 50;
+                }
+                
+                // Add some randomness and system running effects
+                if (systemRunning) {
+                    baseHeight += Math.sin(spectrumPhase + i * 0.5) * 15;
+                    baseHeight += Math.random() * 10;
+                } else {
+                    baseHeight *= 0.2;
+                }
+                
+                // Efficiency affects overall amplitude
+                baseHeight *= (efficiency / 100) * 0.8 + 0.2;
+                
+                bar.targetHeight = Math.max(2, Math.min(height - 10, baseHeight));
+                
+                // Smooth animation
+                bar.height += (bar.targetHeight - bar.height) * 0.1;
+                
+                // Draw bar
+                const x = i * barWidth;
+                const barHeight = bar.height;
+                
+                // Create gradient based on height
+                const gradient = spectrumCtx.createLinearGradient(0, height, 0, height - barHeight);
+                
+                if (barHeight > height * 0.8) {
+                    gradient.addColorStop(0, '#ef4444'); // red for high
+                    gradient.addColorStop(1, '#fbbf24'); // yellow
+                } else if (barHeight > height * 0.5) {
+                    gradient.addColorStop(0, '#22c55e'); // green for optimal
+                    gradient.addColorStop(1, '#06b6d4'); // cyan
+                } else {
+                    gradient.addColorStop(0, '#3b82f6'); // blue for low
+                    gradient.addColorStop(1, '#8b5cf6'); // purple
+                }
+                
+                spectrumCtx.fillStyle = gradient;
+                spectrumCtx.fillRect(x + 1, height - barHeight, barWidth - 2, barHeight);
+                
+                // Add glow effect for high bars
+                if (barHeight > height * 0.7) {
+                    spectrumCtx.shadowColor = bar.color;
+                    spectrumCtx.shadowBlur = 10;
+                    spectrumCtx.fillRect(x + 1, height - barHeight, barWidth - 2, barHeight);
+                    spectrumCtx.shadowBlur = 0;
+                }
+            }
+            
+            // Update spectrum phase for animation
+            spectrumPhase += 0.05;
+            
+            // Update spectrum displays
+            updateSpectrumDisplays();
+        }
+
+        function updateSpectrumDisplays() {
+            const resonanceDisplay = document.getElementById('resonance-display');
+            const peakFreqDisplay = document.getElementById('peak-freq-display');
+            const harmonicDisplay = document.getElementById('harmonic-display');
+            
+            // Calculate resonance state
+            let resonanceState = 'STABLE';
+            if (efficiency > 85) {
+                resonanceState = 'OPTIMAL';
+                resonanceDisplay.className = 'text-green-400';
+            } else if (efficiency < 30) {
+                resonanceState = 'CRITICAL';
+                resonanceDisplay.className = 'text-red-400';
+            } else if (efficiency > 70) {
+                resonanceState = 'HARMONIC';
+                resonanceDisplay.className = 'text-cyan-400';
+            } else {
+                resonanceDisplay.className = 'text-cyan-400';
+            }
+            resonanceDisplay.textContent = resonanceState;
+            
+            // Calculate peak frequency (affected by motor frequency and flux)
+            const peakFreq = ((frequency * fluxValue) / 100000).toFixed(1);
+            peakFreqDisplay.textContent = peakFreq + ' kHz';
+            
+            // Calculate harmonic distortion (affected by pressure and bearings)
+            let harmonic = (pressure / 10000) + (bearingsEngaged ? 0.01 : 0.05);
+            if (motorSynced) harmonic *= 0.5;
+            harmonicDisplay.textContent = harmonic.toFixed(3) + '%';
+        }
+
         // Animation loop
         function animate() {
             if (systemRunning) {
                 updateWaveform();
+                updateSpectrum();
+            } else {
+                updateSpectrum(); // Still show spectrum when offline, just dimmed
             }
             requestAnimationFrame(animate);
         }
@@ -507,6 +660,7 @@
         // Initialize displays
         updateStatusSquare();
         updateWaveform();
+        updateSpectrum();
         updateEfficiency();
         disableControls();
     </script>
