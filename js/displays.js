@@ -75,7 +75,7 @@ function updateWaveform() {
     wavePhase += phaseSpeed;
     
     // Update fundamental frequency for FFT
-    fundamentalFreq = frequency / 6.5; // Convert motor RPM to audio frequency
+    fundamentalFreq = waveformFreq;
 }
 
 function updateSpectrum() {

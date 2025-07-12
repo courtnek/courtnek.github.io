@@ -174,6 +174,13 @@ function initializeWaveformControls() {
         document.getElementById('phase-value').textContent = phaseOffset + '°';
         updateEfficiency();
     });
+
+    // Frequency control
+    document.getElementById('wave-freq-slider').addEventListener('input', function() {
+        waveformFreq = parseInt(this.value);
+        document.getElementById('wave-freq-value').textContent = waveformFreq + ' Hz';
+        updateEfficiency();
+    });
 }
 
 function initializeSystemControls() {

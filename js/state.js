@@ -15,6 +15,7 @@ let spectrumPhase = 0;
 let waveformType = 'sine';
 let waveAmplitudePercent = 50;
 let phaseOffset = 0;
+let waveformFreq = 440;
 let fftBars = [];
 let fundamentalFreq = 440;
 

@@ -16,6 +16,9 @@ function updateEfficiency() {
         if (waveformType === 'square' && fluxValue > 70) baseEfficiency += 8;
         if (waveAmplitudePercent > 40 && waveAmplitudePercent < 80) baseEfficiency += 5;
         
+        // Waveform frequency affects efficiency
+        if (waveformFreq > 300 && waveformFreq < 800) baseEfficiency += 5;
+        
         efficiency = Math.min(100, baseEfficiency);
     }
     
