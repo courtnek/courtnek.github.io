@@ -341,6 +341,11 @@
                 if (pressure > 800 && pressure < 900) baseEfficiency += 10;
                 if (frequency > 2500 && frequency < 3000) baseEfficiency += 10;
                 
+                // Waveform type affects efficiency
+                if (waveformType === 'sine') baseEfficiency += 5;
+                if (waveformType === 'square' && fluxValue > 70) baseEfficiency += 8;
+                if (waveAmplitudePercent > 40 && waveAmplitudePercent < 80) baseEfficiency += 5;
+                
                 efficiency = Math.min(100, baseEfficiency);
             }
             
@@ -465,6 +470,36 @@
             frequency = 2847;
             document.getElementById('freq-input').value = frequency;
             document.getElementById('freq-display').textContent = frequency;
+            updateEfficiency();
+        });
+
+        // Waveform type controls
+        const waveButtons = ['wave-sine', 'wave-square', 'wave-triangle', 'wave-sawtooth'];
+        waveButtons.forEach(buttonId => {
+            document.getElementById(buttonId).addEventListener('click', function() {
+                // Reset all buttons
+                waveButtons.forEach(id => {
+                    document.getElementById(id).className = 'bg-gray-700 hover:bg-orange-600 text-white py-2 px-3 text-xs';
+                });
+                
+                // Highlight selected button
+                this.className = 'bg-orange-600 text-white py-2 px-3 text-xs font-semibold';
+                waveformType = buttonId.replace('wave-', '');
+                updateEfficiency();
+            });
+        });
+
+        // Amplitude control
+        document.getElementById('amplitude-slider').addEventListener('input', function() {
+            waveAmplitudePercent = parseInt(this.value);
+            document.getElementById('amplitude-value').textContent = waveAmplitudePercent + '%';
+            updateEfficiency();
+        });
+
+        // Phase control
+        document.getElementById('phase-slider').addEventListener('input', function() {
+            phaseOffset = parseInt(this.value);
+            document.getElementById('phase-value').textContent = phaseOffset + '°';
             updateEfficiency();
         });
 
