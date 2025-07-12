@@ -8,24 +8,26 @@
 </head>
 <body class="bg-black text-white min-h-screen flex flex-col">
     <!-- Header -->
-    <header class="border-b border-gray-800 py-2">
+    <header id="status-header" class="border-b border-gray-800 py-2 transition-colors duration-500">
         <div class="container mx-auto px-4">
-            <h1 class="text-xl font-bold">Retro Encabulator Control Panel</h1>
+            <div class="flex items-center justify-between">
+                <h1 class="text-xl font-bold">Retro Encabulator Control Panel</h1>
+                <div class="flex items-center gap-6">
+                    <div class="text-right">
+                        <div class="text-sm">System Status: <span id="status-text" class="text-red-400 font-semibold">OFFLINE</span></div>
+                        <div class="text-xs text-gray-300">Efficiency: <span id="efficiency-display" class="text-yellow-400 font-mono">0%</span></div>
+                    </div>
+                    <button id="power-button" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 text-sm font-semibold transition-colors">
+                        START ENCABULATOR
+                    </button>
+                </div>
+            </div>
         </div>
     </header>
 
     <!-- Main Content -->
     <main class="flex-grow py-4">
         <div class="container mx-auto px-4">
-            <div class="text-center mb-4">
-                <h2 id="system-status" class="text-2xl font-light mb-2">System Status: <span id="status-text" class="text-red-400">OFFLINE</span></h2>
-                <div class="flex items-center justify-center gap-4">
-                    <button id="power-button" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 text-base font-semibold">
-                        START ENCABULATOR
-                    </button>
-                    <span class="text-sm text-gray-400">Efficiency: <span id="efficiency-display" class="text-yellow-400">0%</span></span>
-                </div>
-            </div>
 
             <!-- Display Outputs -->
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 max-w-7xl mx-auto mb-4">

@@ -8,6 +8,10 @@ function animate() {
         updateSpectrum(); // Still show spectrum when offline, just dimmed
         updateFFT(); // Show FFT even when offline
     }
+    
+    // Add status text animation
+    animateStatusText();
+    
     requestAnimationFrame(animate);
 }
 
@@ -26,6 +30,38 @@ function flashStatusSquare() {
     }
 }
 
+function animateStatusText() {
+    const statusText = document.getElementById('status-text');
+    const efficiencyDisplay = document.getElementById('efficiency-display');
+    
+    if (systemRunning) {
+        // Animate efficiency display with subtle glow based on value
+        if (efficiency >= 85) {
+            efficiencyDisplay.className = 'text-cyan-400 font-mono animate-pulse';
+        } else if (efficiency >= 60) {
+            efficiencyDisplay.className = 'text-green-400 font-mono';
+        } else if (efficiency >= 30) {
+            efficiencyDisplay.className = 'text-yellow-400 font-mono';
+        } else {
+            efficiencyDisplay.className = 'text-red-400 font-mono animate-pulse';
+        }
+        
+        // Animate status text for critical states
+        if (efficiency < 30) {
+            statusText.className = 'text-red-400 font-semibold animate-pulse';
+        } else if (efficiency >= 85) {
+            statusText.className = 'text-cyan-400 font-semibold';
+        } else if (efficiency >= 60) {
+            statusText.className = 'text-green-400 font-semibold';
+        } else {
+            statusText.className = 'text-yellow-400 font-semibold';
+        }
+    } else {
+        statusText.className = 'text-red-400 font-semibold';
+        efficiencyDisplay.className = 'text-gray-500 font-mono';
+    }
+}
+
 // Initialize all systems
 function initializeSystem() {
     initializeState();
@@ -41,6 +77,7 @@ function initializeSystem() {
     updateSpectrum();
     updateFFT();
     updateEfficiency();
+    updateHeaderBackground(); // Add this line
     disableControls();
 }
 

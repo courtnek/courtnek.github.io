@@ -10,13 +10,13 @@ function initializeControls() {
         
         if (systemRunning) {
             this.textContent = 'STOP ENCABULATOR';
-            this.className = 'bg-red-600 hover:bg-red-700 text-white px-8 py-3 text-lg font-semibold';
+            this.className = 'bg-red-600 hover:bg-red-700 text-white px-4 py-2 text-sm font-semibold transition-colors';
             statusText.textContent = 'ONLINE';
             statusText.className = 'text-green-400';
             enableControls();
         } else {
             this.textContent = 'START ENCABULATOR';
-            this.className = 'bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg font-semibold';
+            this.className = 'bg-green-600 hover:bg-green-700 text-white px-4 py-2 text-sm font-semibold transition-colors';
             statusText.textContent = 'OFFLINE';
             statusText.className = 'text-red-400';
             efficiency = 0;

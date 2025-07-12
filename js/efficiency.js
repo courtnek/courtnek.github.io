@@ -59,3 +59,36 @@ function updateStatusSquare() {
     const stateIndex = Math.floor((fluxValue * pressure) / 10000) % states.length;
     fluxState.textContent = states[stateIndex];
 }
+
+function updateHeaderBackground() {
+    const header = document.getElementById('status-header');
+    
+    if (!systemRunning) {
+        // Offline - dark red glow
+        header.className = 'border-b border-gray-800 py-2 transition-colors duration-500 bg-gradient-to-r from-red-900/20 to-gray-900';
+    } else if (efficiency < 30) {
+        // Critical - pulsing red
+        header.className = 'border-b border-red-600 py-2 transition-colors duration-500 bg-gradient-to-r from-red-800/40 to-red-900/20 animate-pulse';
+    } else if (efficiency < 60) {
+        // Suboptimal - orange/yellow
+        header.className = 'border-b border-yellow-600 py-2 transition-colors duration-500 bg-gradient-to-r from-yellow-800/30 to-orange-900/20';
+    } else if (efficiency < 85) {
+        // Optimal - green
+        header.className = 'border-b border-green-600 py-2 transition-colors duration-500 bg-gradient-to-r from-green-800/30 to-green-900/20';
+    } else {
+        // Maximum efficiency - cyan glow with subtle animation
+        header.className = 'border-b border-cyan-400 py-2 transition-colors duration-500 bg-gradient-to-r from-cyan-800/40 to-blue-900/30';
+        
+        // Add extra glow effect for maximum efficiency
+        setTimeout(() => {
+            if (efficiency >= 85) {
+                header.style.boxShadow = '0 0 20px rgba(34, 197, 94, 0.3)';
+            }
+        }, 500);
+    }
+    
+    // Remove box shadow for non-maximum states
+    if (efficiency < 85) {
+        header.style.boxShadow = 'none';
+    }
+}
