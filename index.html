@@ -69,7 +69,7 @@
       max-width: 800px;
     }
 
-    a.project-card {
+    .project-card {
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
@@ -84,7 +84,7 @@
       overflow: hidden;
     }
 
-    a.project-card::before {
+    .project-card::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
@@ -93,8 +93,8 @@
       transition: opacity 0.2s;
     }
 
-    a.project-card:hover { transform: translateY(-2px); border-color: var(--accent-color, var(--purple)); }
-    a.project-card:hover::before { opacity: 1; background: var(--accent-color, var(--purple)); }
+    .project-card:hover { transform: translateY(-2px); border-color: var(--accent-color, var(--purple)); }
+    .project-card:hover::before { opacity: 1; background: var(--accent-color, var(--purple)); }
 
     .card-impromptu { --accent-color: var(--purple); }
     .card-qr        { --accent-color: var(--cyan); }
