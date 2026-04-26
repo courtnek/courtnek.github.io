@@ -100,14 +100,6 @@
     .card-qr        { --accent-color: var(--cyan); }
     .card-retro     { --accent-color: var(--green); }
 
-    .project-tag {
-      font-size: 0.65rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--accent-color, var(--purple));
-    }
-
     .project-name {
       font-size: 1.05rem;
       font-weight: 700;
@@ -120,8 +112,6 @@
       line-height: 1.6;
       margin-top: 0.1rem;
     }
-
-    footer { font-size: 0.72rem; color: var(--text-dim); }
 
     @media (max-width: 480px) {
       h1 { font-size: 1.5rem; }
@@ -139,25 +129,20 @@
 
   <div class="projects">
     <a class="project-card card-impromptu" href="https://impromptu.kailean.com">
-      <span class="project-tag">Music</span>
       <span class="project-name">Impromptu Music</span>
       <span class="project-desc">Generate creative prompts for getting musically unstuck.</span>
     </a>
 
     <a class="project-card card-qr" href="https://qr.kailean.com">
-      <span class="project-tag">Tool</span>
       <span class="project-name">QR Code Generator</span>
       <span class="project-desc">The result of educational tinkering with QR codes.</span>
     </a>
 
     <a class="project-card card-retro" href="https://retro.kailean.com">
-      <span class="project-tag">Toy</span>
       <span class="project-name">Retro Encabulator</span>
       <span class="project-desc">A control panel for managing the turbo encabulator's cardinal grammeters.</span>
     </a>
   </div>
-
-  <footer>more on the way</footer>
 
   <script>
     const canvas = document.getElementById('stars')
