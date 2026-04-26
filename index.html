@@ -99,6 +99,7 @@
     .card-impromptu { --accent-color: var(--purple); }
     .card-qr        { --accent-color: var(--cyan); }
     .card-retro     { --accent-color: var(--green); }
+    .card-maxwell   { --accent-color: #e0af68; opacity: 0.5; cursor: default; pointer-events: none; }
 
     .project-name {
       font-size: 1.05rem;
@@ -142,6 +143,11 @@
       <span class="project-name">Retro Encabulator</span>
       <span class="project-desc">A control panel for managing the turbo encabulator's cardinal grammeters.</span>
     </a>
+
+    <div class="project-card card-maxwell">
+      <span class="project-name">Maxwell <span style="font-size:0.7rem;font-weight:400;color:var(--text-dim)">Soon™</span></span>
+      <span class="project-desc">Coming soon.</span>
+    </div>
   </div>
 
   <script>
@@ -180,17 +186,17 @@
       for (const s of stars) {
         s.dist += s.speed
 
-        // reset when it drifts off screen
-        const maxDist = Math.hypot(cx, cy) / Math.min(W, H) * 1.5
-        if (s.dist > maxDist) {
-          s.dist = Math.random() * 0.05
-          s.angle = Math.random() * Math.PI * 2
-        }
-
         // project radial coords to screen
         const scale = Math.min(W, H)
         const x = cx + Math.cos(s.angle) * s.dist * scale
         const y = cy + Math.sin(s.angle) * s.dist * scale
+
+        // reset as soon as it leaves the canvas
+        if (x < -10 || x > W + 10 || y < -10 || y > H + 10) {
+          s.dist = Math.random() * 0.02
+          s.angle = Math.random() * Math.PI * 2
+          continue
+        }
 
         // stretch into a streak at higher distances
         const streak = Math.max(1, s.dist * 12)
