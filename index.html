@@ -10,13 +10,11 @@
     :root {
       --bg:         #1a1b2e;
       --surface:    #16213e;
-      --surface-2:  #0f3460;
       --border:     #2a2d4a;
       --text:       #a9b1d6;
       --text-bright:#c0caf5;
       --text-dim:   #565f89;
       --purple:     #bb9af7;
-      --blue:       #7aa2f7;
       --cyan:       #7dcfff;
       --green:      #9ece6a;
       --radius:     8px;
@@ -29,6 +27,14 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
+    canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
     body {
       display: flex;
       flex-direction: column;
@@ -37,11 +43,10 @@
       min-height: 100vh;
       padding: 2rem;
       gap: 3rem;
+      position: relative;
     }
 
-    header {
-      text-align: center;
-    }
+    header { text-align: center; }
 
     h1 {
       font-size: 2rem;
@@ -88,19 +93,12 @@
       transition: opacity 0.2s;
     }
 
-    a.project-card:hover {
-      transform: translateY(-2px);
-      border-color: var(--accent-color, var(--purple));
-    }
+    a.project-card:hover { transform: translateY(-2px); border-color: var(--accent-color, var(--purple)); }
+    a.project-card:hover::before { opacity: 1; background: var(--accent-color, var(--purple)); }
 
-    a.project-card:hover::before {
-      opacity: 1;
-      background: var(--accent-color, var(--purple));
-    }
-
-    .card-impromptu  { --accent-color: var(--purple); }
-    .card-qr         { --accent-color: var(--cyan); }
-    .card-retro      { --accent-color: var(--green); }
+    .card-impromptu { --accent-color: var(--purple); }
+    .card-qr        { --accent-color: var(--cyan); }
+    .card-retro     { --accent-color: var(--green); }
 
     .project-tag {
       font-size: 0.65rem;
@@ -123,10 +121,7 @@
       margin-top: 0.1rem;
     }
 
-    footer {
-      font-size: 0.72rem;
-      color: var(--text-dim);
-    }
+    footer { font-size: 0.72rem; color: var(--text-dim); }
 
     @media (max-width: 480px) {
       h1 { font-size: 1.5rem; }
@@ -135,6 +130,8 @@
   </style>
 </head>
 <body>
+  <canvas id="stars"></canvas>
+
   <header>
     <h1>Behold, my stuff.</h1>
     <p class="subtitle">kailean.com</p>
@@ -161,5 +158,76 @@
   </div>
 
   <footer>more on the way</footer>
+
+  <script>
+    const canvas = document.getElementById('stars')
+    const ctx = canvas.getContext('2d')
+    const COUNT = 160
+    let W, H, cx, cy, stars
+
+    function resize() {
+      W = canvas.width = window.innerWidth
+      H = canvas.height = window.innerHeight
+      cx = W / 2
+      cy = H / 2
+    }
+
+    function mkStar() {
+      const angle = Math.random() * Math.PI * 2
+      const dist = Math.random() * 0.3 // start near centre
+      return {
+        angle,
+        dist,
+        speed: 0.00015 + Math.random() * 0.0003,
+        size: 0.5 + Math.random() * 1.2,
+        opacity: 0.2 + Math.random() * 0.5
+      }
+    }
+
+    function init() {
+      resize()
+      stars = Array.from({ length: COUNT }, mkStar)
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H)
+
+      for (const s of stars) {
+        s.dist += s.speed
+
+        // reset when it drifts off screen
+        const maxDist = Math.hypot(cx, cy) / Math.min(W, H) * 1.5
+        if (s.dist > maxDist) {
+          s.dist = Math.random() * 0.05
+          s.angle = Math.random() * Math.PI * 2
+        }
+
+        // project radial coords to screen
+        const scale = Math.min(W, H)
+        const x = cx + Math.cos(s.angle) * s.dist * scale
+        const y = cy + Math.sin(s.angle) * s.dist * scale
+
+        // stretch into a streak at higher distances
+        const streak = Math.max(1, s.dist * 12)
+        const tx = Math.cos(s.angle) * streak
+        const ty = Math.sin(s.angle) * streak
+
+        const alpha = Math.min(s.opacity, s.dist * 4)
+        ctx.beginPath()
+        ctx.moveTo(x - tx * 0.5, y - ty * 0.5)
+        ctx.lineTo(x + tx * 0.5, y + ty * 0.5)
+        ctx.strokeStyle = `rgba(169, 177, 214, ${alpha})`
+        ctx.lineWidth = s.size
+        ctx.lineCap = 'round'
+        ctx.stroke()
+      }
+
+      requestAnimationFrame(draw)
+    }
+
+    window.addEventListener('resize', resize)
+    init()
+    draw()
+  </script>
 </body>
 </html>
